@@ -148,8 +148,15 @@ class TeamManager:
     ) -> tuple[Team, int, int]:
         """Create team instance from config"""
 
+        # Use ports from configuration when specified; fallback to auto (-1)
+        requested_novnc_port = self.config.get("novnc_port", -1) if isinstance(self.config, dict) else -1
+        requested_playwright_port = self.config.get("playwright_port", -1) if isinstance(self.config, dict) else -1
+
         _, novnc_port, playwright_port = get_browser_resource_config(
-            paths.external_run_dir, -1, -1, self.inside_docker
+            paths.external_run_dir,
+            requested_novnc_port,
+            requested_playwright_port,
+            self.inside_docker,
         )
         try:
             if not self.load_from_config:

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import os
 
 from pathlib import Path
 import secrets
@@ -94,10 +95,35 @@ class VncDockerPlaywrightBrowser(
         )
         self._inside_docker = inside_docker
         self._network_name = network_name
+        # Determine the hostname used in the URLs we hand back to the UI. When running
+        # "inside_docker" the browser container is reachable via its docker DNS name on
+        # the user-facing Magentic-UI container network. In the more common case where the
+        # Magentic-UI process is *not* running inside another docker container (i.e. it is
+        # executed directly on the EC2 host), we previously hard-coded "127.0.0.1".
+        #
+        # Unfortunately, hard-coding localhost causes broken links when the UI itself is
+        # accessed from a different machine – e.g. your laptop connecting to an EC2
+        # instance over the public Internet.  The browser *is* bound to 0.0.0.0 and the
+        # port is correctly published by docker, yet the URL returned by `vnc_address`
+        # points to 127.0.0.1 which is only valid from inside the EC2 box.
+        #
+        # To fix this we allow the external hostname / IP to be overridden via an
+        # environment variable.  The resolution precedence is:
+        #   1. Explicit parameter `external_host` supplied to the constructor.
+        #   2. Environment variable `MUI_EXTERNAL_HOST` (falls back to
+        #      `PUBLIC_HOST`, `PUBLIC_IP`, `HOST_IP`).
+        #   3. Fallback to "127.0.0.1" (previous behaviour).
+        external_host_env = (
+            os.getenv("MUI_EXTERNAL_HOST")
+            or os.getenv("PUBLIC_HOST")
+            or os.getenv("PUBLIC_IP")
+            or os.getenv("HOST_IP")
+        )
+
         self._hostname = (
             f"magentic-ui-vnc-browser_{self._playwright_websocket_path}_{self._novnc_port}"
-            if inside_docker
-            else "127.0.0.1"
+            if self._inside_docker
+            else external_host_env or "127.0.0.1"
         )
         self._docker_name = f"magentic-ui-vnc-browser_{self._playwright_websocket_path}_{self._novnc_port}"
 
@@ -114,10 +140,17 @@ class VncDockerPlaywrightBrowser(
         """
         self._playwright_port, playwright_sock = self._get_available_port()
         self._novnc_port, novnc_sock = self._get_available_port()
+        external_host_env = (
+            os.getenv("MUI_EXTERNAL_HOST")
+            or os.getenv("PUBLIC_HOST")
+            or os.getenv("PUBLIC_IP")
+            or os.getenv("HOST_IP")
+        )
+
         self._hostname = (
             f"magentic-ui-vnc-browser_{self._playwright_websocket_path}_{self._novnc_port}"
             if self._inside_docker
-            else "127.0.0.1"
+            else external_host_env or "127.0.0.1"
         )
         self._docker_name = f"magentic-ui-vnc-browser_{self._playwright_websocket_path}_{self._novnc_port}"
         playwright_sock.close()

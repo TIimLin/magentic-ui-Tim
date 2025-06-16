@@ -175,6 +175,7 @@ const DetailViewer: React.FC<DetailViewerProps> = ({
     </>
   );
 
+  const host = window.location.hostname;
   const renderLiveTab = React.useMemo(() => {
     if (!novncPort) {
       return (
@@ -212,7 +213,7 @@ const DetailViewer: React.FC<DetailViewerProps> = ({
           >
             <Suspense fallback={<div>Loading VNC viewer...</div>}>
               <VncScreen
-                url={`ws://localhost:${novncPort}`}
+                url={`ws://${host}:${novncPort}`}
                 scaleViewport
                 background="#000000"
                 style={{

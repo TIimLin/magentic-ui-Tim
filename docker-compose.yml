@@ -1,0 +1,35 @@
+services:
+  magentic-ui-app:
+    # Build the main application image (Dockerfile in project root)
+    build: .
+    image: magentic-ui-app
+    container_name: magentic-ui-app
+
+    # Automatically restart unless explicitly stopped
+    restart: unless-stopped
+
+    # Forward only the web UI port – the spawned browser container will publish 6080/37367 itself
+    ports:
+      - "8081:8081"   # Magentic-UI Web
+
+    # Mount the docker socket so the app can start/stop the VNC browser container
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./config.yaml:/app/config.yaml:ro
+
+    # Expose the host/IP that外部瀏覽器應該連到。在 shell 先 export MUI_EXTERNAL_HOST=57.181.203.134
+    environment:
+      - MUI_EXTERNAL_HOST=${MUI_EXTERNAL_HOST}
+      - INSIDE_DOCKER=1
+
+    # Run the CLI inside the container
+    command: >
+      magentic ui --host 0.0.0.0 --port 8081
+
+    networks:
+      - my-network
+
+networks:
+  my-network:
+    name: my-network
+    driver: bridge 
