@@ -14,9 +14,9 @@ model_config: &client
 # Clients for each agent #
 ##########################
 
-# 固定 Playwright 與 noVNC 對外埠號，避免隨機高埠被安全群組阻擋
-playwright_port: 37367  # 對 UI 容器與瀏覽器容器皆適用
-novnc_port: 6080        # LiveView 將永遠走 6080
+# 讓 Magentic-UI 自動挑選可用埠，避免多瀏覽器衝突
+playwright_port: -1
+novnc_port: -1
 
 orchestrator_client: *client
 coder_client: *client

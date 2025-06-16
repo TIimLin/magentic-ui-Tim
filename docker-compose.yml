@@ -10,7 +10,7 @@ services:
 
     # Forward only the web UI port – the spawned browser container will publish 6080/37367 itself
     ports:
-      - "8081:8081"   # Magentic-UI Web
+      - "8081:8081"                       # Magentic-UI Web
 
     # Mount the docker socket so the app can start/stop the VNC browser container
     volumes:
@@ -21,6 +21,7 @@ services:
     environment:
       - MUI_EXTERNAL_HOST=${MUI_EXTERNAL_HOST}
       - INSIDE_DOCKER=1
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
 
     # Run the CLI inside the container
     command: >
