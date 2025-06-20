@@ -54,6 +54,7 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ isOpen, onClose }) => {
     { value: "o3-mini-2025-01-31", label: "OpenAI O3 Mini" },
     { value: "gpt-4o-2024-08-06", label: "OpenAI GPT-4o" },
     { value: "gpt-4o-mini-2024-07-18", label: "OpenAI GPT-4o Mini" },
+    { value: "gemini-2.5-flash", label: "Gemini 2.5 Flash" },
   ];
 
   const AZURE_AI_FOUNDRY_YAML = `model_config: &client
@@ -134,6 +135,21 @@ web_surfer_client: *client
 file_surfer_client: *client
 action_guard_client: *client
 `;
+
+  function generateGeminiModelConfig(model: string) {
+    return `model_config: &client
+  provider: magentic_ui.models.gemini_client.GeminiChatCompletionClient
+  config:
+    model: ${model}
+  max_retries: 5
+
+orchestrator_client: *client
+coder_client: *client
+web_surfer_client: *client
+file_surfer_client: *client
+action_guard_client: *client
+`;
+  }
 
   React.useEffect(() => {
     if (isOpen) {
@@ -272,6 +288,14 @@ action_guard_client: *client
       if (modelName === "ollama") {
         handleUpdateConfig({ model_configs: OLLAMA_YAML });
         message.success("Ollama configuration applied");
+        return;
+      }
+      // Gemini models
+      if (modelName.startsWith("gemini")) {
+        handleUpdateConfig({
+          model_configs: generateGeminiModelConfig(modelName),
+        });
+        message.success("Gemini model configuration applied");
         return;
       }
       // For OpenAI models, reset YAML to default with only client and selected model

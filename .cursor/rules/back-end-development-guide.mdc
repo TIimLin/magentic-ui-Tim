@@ -1,0 +1,136 @@
+---
+description: FastAPI 後端開發指南。指導 AI 在開發或修改後端 API 時，遵循專案的結構、API 設計、數據模型、錯誤處理及測試最佳實踐，確保高效、高品質的後端開發。
+globs: 
+alwaysApply: false
+---
+# FastAPI 後端開發與實施指南
+
+## 🎯 專家分析與背景
+- **技術選型深層原因**: FastAPI 因其高性能、易於學習和開發效率高而成為現代 Python 後端開發的首選。結合 Pydantic 進行數據驗證和序列化，以及內建的 OpenAPI/Swagger 文檔自動生成，極大簡化了 API 開發。
+- **業界最佳實踐與標準**: 遵循 RESTful API 設計原則，強調接口的清晰性、一致性和狀態無關性。利用依賴注入 (Dependency Injection) 實現模組化和可測試性。
+- **核心概念與多年實戰經驗總結**: 重視數據模型與數據庫操作的解耦，善用 ORM/ODM (SQLModel) 簡化數據交互。強調錯誤處理的統一性與用戶友好性，並將日誌記錄作為應用程式可觀測性的重要環節。
+
+## 🔍 核心實施策略
+
+### 技術架構設計
+- **專案結構**:
+    - `src/magentic_ui/backend/web/routes/`: 存放所有 FastAPI 路由定義。
+    - `src/magentic_ui/backend/datamodel/db.py`: 定義 SQLModel 數據庫模型。
+    - `src/magentic_ui/backend/database/db_manager.py`: 處理數據庫連接與操作。
+    - `src/magentic_ui/backend/teammanager/teammanager.py`: 核心業務邏輯。
+    - `src/magentic_ui/backend/utils/utils.py`: 存放通用工具函數。
+- **模組化設計**: 將不同的業務功能模組化，每個模組負責特定功能，如用戶管理、會話管理、團隊管理等。
+- **依賴注入**: 充分利用 FastAPI 的依賴注入系統，管理數據庫會話、配置和其他共享資源。
+- **API 版本控制**: 考慮在 URL 或 Header 中引入 API 版本，以應對未來需求變更。
+
+### 開發實踐規範
+- **程式碼組織**: 按照功能劃分檔案和目錄，保持程式碼的內聚性和模塊化。
+- **檔案命名**: 採用小寫蛇形命名法 (snake_case)，如 `user_routes.py`, `plan_model.py`。
+- **版本控制策略**: 遵循專案的 `git-workflow-guide.mdc`，使用功能分支進行開發，並通過 Squash Merge 合併到主分支。
+
+## 💻 具體實現指引
+
+### 環境配置
+- **Python 虛擬環境**: 建議使用 `uv` 或 `pipenv` 管理專案依賴。
+    ```bash
+    uv venv
+    source .venv/bin/activate
+    uv pip install -e ".[dev]"
+    ```
+- **數據庫**: 使用 SQLite 進行本地開發，SQLModel 將會自動處理數據庫的連接和遷移。
+- **環境變數**: 使用 `.env` 檔案管理敏感資訊和環境特定配置。
+    ```ini
+    # .env 範例
+    DATABASE_URL="sqlite:///./sql_app.db"
+    # 其他 FastAPI 或應用相關的環境變數
+    ```
+
+### 程式碼實現
+- **數據模型 (SQLModel)**:
+    ```python
+    # src/magentic_ui/backend/datamodel/db.py 範例
+    from typing import Optional
+    from sqlmodel import Field, SQLModel
+
+    class Hero(SQLModel, table=True):
+        id: Optional[int] = Field(default=None, primary_key=True)
+        name: str = Field(index=True)
+        secret_name: str
+        age: Optional[int] = Field(default=None, index=True)
+    ```
+- **API 路由**:
+    ```python
+    # src/magentic_ui/backend/web/routes/heroes.py 範例
+    from fastapi import APIRouter, Depends
+    from sqlmodel import Session
+    from magentic_ui.backend.datamodel.db import Hero
+    from magentic_ui.backend.web.deps import get_session
+
+    router = APIRouter()
+
+    @router.post("/heroes/", response_model=Hero)
+    def create_hero(*, hero: Hero, session: Session = Depends(get_session)):
+        session.add(hero)
+        session.commit()
+        session.refresh(hero)
+        return hero
+
+    @router.get("/heroes/", response_model=list[Hero])
+    def read_heroes(*, session: Session = Depends(get_session)):
+        return session.query(Hero).all()
+    ```
+- **依賴注入**:
+    ```python
+    # src/magentic_ui/backend/web/deps.py 範例
+    from sqlmodel import Session, create_engine
+    from magentic_ui.backend.datamodel.db import SQLModel
+
+    DATABASE_URL = "sqlite:///./sql_app.db" # 應從配置讀取
+    engine = create_engine(DATABASE_URL, echo=True)
+
+    def create_db_and_tables():
+        SQLModel.metadata.create_all(engine)
+
+    def get_session():
+        with Session(engine) as session:
+            yield session
+    ```
+- **錯誤處理**:
+    ```python
+    # src/magentic_ui/backend/web/app.py 中註冊全局異常處理器
+    from fastapi import FastAPI, Request, HTTPException
+    from fastapi.responses import JSONResponse
+
+    app = FastAPI()
+
+    @app.exception_handler(HTTPException)
+    async def http_exception_handler(request: Request, exc: HTTPException):
+        return JSONResponse(
+            status_code=exc.status_code,
+            content={"message": exc.detail},
+        )
+    ```
+- **日誌記錄**: 整合 `loguru`。
+    ```python
+    # utils/logger.py (範例)
+    from loguru import logger
+
+    logger.add("file.log", rotation="10 MB", level="INFO")
+    ```
+
+### 常見陷阱與解決方案
+- **N+1 問題**: 適當使用 ORM 的 `selectinload` 或 `joinedload` 預加載關聯數據。
+- **密碼安全**: 永遠對密碼進行哈希處理，不要明文存儲。
+- **CORS 問題**: 正確配置 FastAPI 的 `CORS` 中間件。
+
+## 🚀 專家心路歷程
+- **技術決策的權衡**: 在選擇 ORM 時，SQLModel 提供了 Pydantic 和 SQLAlchemy 的良好結合，簡化了數據模型定義和數據庫操作，同時保留了 SQLAlchemy 的強大功能，這是綜合考慮開發效率和靈活性後的優選。
+- **持續集成與部署**: 強烈建議將單元測試和整合測試納入 CI/CD 流程，確保每次提交都能自動化驗證程式碼品質。
+- **性能監控**: 隨著專案規模擴大，集成 APM (Application Performance Monitoring) 工具至關重要，以便及時發現和解決性能瓶頸。
+
+## 📋 品質檢核標準
+- **功能完整性**: 所有 API 端點是否按預期工作，並處理所有邊緣情況。
+- **性能指標**: API 響應時間是否符合預期，數據庫查詢是否優化。
+- **安全性**: 認證授權機制是否健壯，數據輸入是否經過充分驗證和清理。
+- **可維護性**: 程式碼是否清晰、模組化，遵循 PEP 8 規範，並有充足的註釋。
+- **測試覆蓋率**: 確保核心業務邏輯和 API 端點有足夠的測試覆蓋。

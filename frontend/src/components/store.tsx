@@ -32,14 +32,14 @@ const defaultConfig: GeneralConfig = {
   do_bing_search: false,
   websurfer_loop: false,
   model_configs: `model_config: &client
-  provider: OpenAIChatCompletionClient
+  provider: magentic_ui.models.gemini_client.GeminiChatCompletionClient
   config:
-    model: gpt-4.1-2025-04-14
+    model: gemini-2.5-flash
   max_retries: 5
 model_config_action_guard: &client_action_guard
-  provider: OpenAIChatCompletionClient
+  provider: magentic_ui.models.gemini_client.GeminiChatCompletionClient
   config:
-    model: gpt-4.1-nano-2025-04-14
+    model: gemini-2.5-flash
   max_retries: 5
 
 orchestrator_client: *client

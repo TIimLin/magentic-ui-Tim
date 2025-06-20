@@ -1,0 +1,125 @@
+---
+description: Git 工作流程與版本控制指南。指導 AI 在接收「暫存」、「上版」等指令時，自動執行包含分支判斷、WIP 提交、Squash 合併、分支清理及提交訊息格式化的標準化 Git 流程。
+globs: 
+alwaysApply: false
+---
+# Git 工作流程與 AI 協作指南
+
+本指南旨在定義一套標準化的 Git 工作流程，確保 AI 在協助開發時，能夠精準、一致地處理版本控制任務。此流程是 `development-conventions.mdc` 中開發SOP的一部分。
+
+## 1. 核心工作流程概覽
+
+AI 主要依據使用者的指令，執行兩種核心工作流程：
+
+1.  **WIP 暫存流程 (WIP Workflow)**: 當使用者下達「暫存進度」、「設定儲存點」等指令時觸發。此流程的核心是將當前的工作進度，以 `WIP` (Work-In-Progress) 的形式，安全地提交到功能分支上。
+2.  **正式上版流程 (Release Workflow)**: 當使用者下達「上版」、「正式提交」等指令時觸發。此流程會將功能分支上的所有 `WIP` 提交，壓平 (Squash) 成一則高品質的正式提交，合併回 `main` 分支，並清理環境。
+
+---
+
+## 2. WIP 暫存流程 (WIP Workflow)
+
+此流程確保所有開發中的異動都能被及時且正確地記錄。
+
+### 步驟 1: 智慧分支判斷
+當接收到暫存指令時，AI 必須首先執行以下判斷：
+
+1.  **檢查當前分支**:
+    - **若在 `main` 分支**: AI 需分析當前已變更的檔案，自動產生一個能描述其核心功能的分支名稱 (格式為 `feature/xxx`)，並建立該新分支。
+    - **若在 `feature/xxx` 分支**:
+        - **情境符合**: 通常直接在此分支上進行後續操作。
+        - **情境不符**: 若 AI 明顯感知到當前的變更內容，與所在功能分支的名稱有顯著落差，**必須向使用者反饋**，並根據使用者的決定來建立新分支或繼續操作。
+
+### 步驟 2: 建立 WIP 提交
+1.  **加入異動**: 將當前對話中涉及的所有檔案變更加入暫存區 (`git add`)。
+2.  **建立提交**: 建立一筆 `WIP` 提交。
+3.  **訊息格式**: 提交訊息應為**簡潔的中文描述**，直接說明該次進度的核心內容。
+    - *範例*: `git commit -m "新增登入按鈕 RWD 樣式"`
+    - *範例*: `git commit -m "完成註冊表單驗證邏輯"`
+
+---
+
+## 3. 正式上版流程 (Release Workflow) - 全自動流程
+
+此流程確保合入 `main` 分支的每一筆提交都是完整、有意義且格式標準的。**此流程為全自動，無需使用者手動介入。**
+
+### 步驟 1: 切換並更新主幹
+```bash
+git checkout main
+git pull origin main
+```
+
+### 步驟 2: 壓平合併 (Squash Merge)
+在 `main` 分支上，執行 `squash merge` 將功能分支 (`feature/xxx`) 的所有提交內容，壓平為一次性的變更並放入暫存区。
+```bash
+git merge --squash feature/xxx
+```
+
+### 步驟 3: 正式提交
+使用符合規範的訊息，將暫存區的變更提交至 `main` 分支。
+```bash
+git commit -m "[type] Subject"
+```
+- AI 會根據所有 `WIP` 提交的內容，自動草擬一則高品質的提交訊息。
+
+### 步驟 4: 推送與清理
+1.  **推送主幹**: 將更新後的 `main` 分支推送到遠端。
+    ```bash
+    git push origin main
+    ```
+2.  **刪除功能分支**: 在本地刪除已被合併的功能分支。
+    ```bash
+    git branch -D feature/xxx
+    ```
+    *使用 `-D` (大寫) 是為了強制刪除，避免因本地 Git 狀態問題而中斷。*
+
+### 步驟 5: 最終驗證
+完成上述步驟後，AI 必須自動執行以下指令，並向使用者回報結果，以確認工作區狀態乾淨且提交歷史正確。
+```bash
+git status
+git lg -3
+```
+
+---
+
+## 4. 正式提交訊息規範
+
+所有經由上版流程合入 `main` 分支的提交，都必須嚴格遵循此規範。
+
+### 4.1 格式
+`[type] Subject Part 1 | Subject Part 2`
+
+- **範例 (句子式)**: `[front-end] Implement user authentication page via JWT. | Add loading spinner for login button.`
+- **範例 (標題式)**: `[docs] Update Git Workflow Guide for AI Collaboration`
+
+### 4.2 範疇 (Type) 定義
+| 範疇 | 英文 | 核心職責 | 注意事項 |
+| :--- | :--- | :--- | :--- |
+| 前端 | `front-end` | UI/UX、頁面元件、前端互動邏輯 | |
+| 後端 | `back-end` | 核心業務 API、後端服務 | |
+| 整合 | `integration` | 同時涉及前後端 | |
+| 資料庫 | `database` | Schema 設計、資料遷移、索引優化 | |
+| 部署 | `deploy` | 雲端部署、容器化 (Docker)、CI/CD | |
+| 事務 | `chore` | 套件管理、框架設定、環境變數 | |
+| 文件 | `docs` | `.cursor/rules/*.mdc` 或 `README.md` | |
+| 格式 | `style` | 程式碼排版修正 | **僅限於**執行 `npm run formatter` 這類格式化指令所產生的變更，且無任何其他邏輯異動時，才可作為主要 `type`。 |
+
+### 4.3 主題 (Subject) 撰寫規則
+- **智慧化提煉**: AI 應分析功能分支上所有 `WIP` 提交的訊息，提煉總結出所有核心修改主題。主題應聚焦於「**修復/新增了什麼**」、「**為了什麼功能/目的**」。
+- **主題分隔**: 若有多個核心主題，使用 ` | ` (空格+豎線+空格) 進行分隔。
+- **格式二選一 (強制)**:
+    1.  **句子式 (Sentence case)**:
+        - 句首單字大寫，其餘小寫。
+        - **每個**由 `|` 分隔的獨立句子，**句尾都必須加上句點 `.`**。
+        - *範例*: `Update user profile validation logic. | Fix image upload endpoint error.`
+    2.  **標題式 (Title Case)**:
+        - 主要單字首字母大寫 (如 `of`, `a`, `the` 等助詞可小寫)。
+        - 句尾**不得**加句點。
+        - *範例*: Refactor User Authentication Module
+
+## 5. 指令參考
+- **日誌檢查**: `git lg`
+  ```bash
+  # git lg 的完整定義
+  git log --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit
+  ```
+- **常用指令**: `git status`, `git branch --show-current`

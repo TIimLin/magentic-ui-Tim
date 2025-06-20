@@ -1,0 +1,120 @@
+---
+description: Docker 與部署指南。指導 AI 在處理容器化配置、構建及應用部署時，遵循專案的 Dockerfile 編寫、Docker Compose 使用、多階段構建及 CI/CD 最佳實踐，確保高效、可靠的應用部署。
+globs: 
+alwaysApply: false
+---
+# Docker 與部署指南
+
+## 🎯 專家分析與背景
+- **技術選型深層原因**: Docker 提供了一致的開發、測試和生產環境，解決了「在我的機器上可以運行」的問題。它使得應用程式的打包、分發和運行變得高效且可預測。對於 `magentic-ui-Tim` 這樣的前後端分離且包含 AI Agent 服務的複雜專案，Docker 容器化是實現環境隔離、快速部署和橫向擴展的關鍵。
+- **業界最佳實踐與標準**: 遵循容器化應用程式設計模式，強調每個容器只運行一個核心進程，並通過 Docker Compose 管理多服務應用。重視鏡像優化，減少鏡像大小和構建時間。利用 CI/CD 自動化部署流程。
+- **核心概念與多年實戰經驗總結**: 理解分層鏡像的原理，善用構建緩存。對於不同環境（開發、測試、生產），採用不同的 `Dockerfile` 或 `docker-compose.yml` 配置，以平衡開發效率和生產穩定性。安全是容器部署的重中之重，需注意最小權限原則和漏洞掃描。
+
+## 🔍 核心實施策略
+
+### 技術架構設計
+- **服務拆分**: 將 FastAPI 後端、Gatsby 前端和 AI Agent 服務分別打包成獨立的 Docker 鏡像。例如：`magentic-ui-python-env` (Python 後端), `magentic-ui-browser-docker` (Web Surfer Agent 使用的瀏覽器環境)。
+- **Docker Compose**: 使用 `docker-compose.yml` 定義和運行多容器應用程式，管理服務間的依賴、網絡和卷。
+- **網絡配置**: 確保服務間能夠通過容器名稱互相通訊，必要時定義自定義網絡。
+- **卷掛載**: 對於數據持久化、日誌或開發環境的程式碼同步，使用卷掛載。
+
+### 開發實踐規範
+- **Dockerfile 編寫**: 遵循 `Dockerfile` 最佳實踐，使用多階段構建 (Multi-stage Builds) 減小最終鏡像大小。明確指定基礎鏡像版本，並將變動頻率低的層放在前面。
+- **環境變數管理**: 通過環境變數 (Environment Variables) 向容器傳遞配置，而不是硬編碼在鏡像中。使用 `.env` 檔案管理本地開發環境的環境變數。
+- **日誌與監控**: 將容器日誌輸出到標準輸出 (stdout/stderr)，以便通過 Docker 日誌驅動或集中式日誌系統收集。集成監控工具以獲取容器運行狀態和性能指標。
+- **構建流程**: 確保 Docker 構建流程可重複且高效。在 CI/CD 流水線中自動化鏡像構建和推送。
+- **安全加固**: 使用非 root 用戶運行容器進程。定期更新基礎鏡像和依賴。掃描鏡像漏洞。
+
+## 💻 具體實現指引
+
+### 環境配置
+- **Docker 與 Docker Compose**: 確保本地環境已安裝 Docker 和 Docker Compose。
+- **本地開發啟動**: 使用 Docker Compose 啟動所有服務。
+    ```bash
+    docker-compose up --build
+    # 或後台運行
+    docker-compose up -d --build
+    ```
+
+### 程式碼實現
+- **`Dockerfile` 範例 (Python 後端)**:
+    ```dockerfile
+    # src/magentic_ui/docker/magentic-ui-python-env/Dockerfile 範例
+    FROM python:3.10-slim-buster as base
+
+    WORKDIR /app
+
+    # Install uv
+    RUN pip install uv
+
+    COPY pyproject.toml uv.lock ./ 
+    RUN uv sync --system-type=linux
+
+    COPY . .
+
+    FROM base as builder
+
+    # Final stage
+    FROM base as final
+
+    COPY --from=builder /app /app
+
+    CMD ["python", "-m", "magentic_ui.backend.cli", "run", "--host", "0.0.0.0", "--port", "7000"]
+    ```
+- **`docker-compose.yml` 範例 (核心服務)**:
+    ```yaml
+    # docker-compose.yml 範例 (精簡版)
+    version: '3.8'
+
+    services:
+      backend:
+        build:
+          context: .
+          dockerfile: src/magentic_ui/docker/magentic-ui-python-env/Dockerfile
+        ports:
+          - "7000:7000"
+        volumes:
+          - ./src/magentic_ui/backend:/app/src/magentic_ui/backend # 開發時方便熱重載
+        environment:
+          # 從 .env 檔案加載，或在此處定義
+          DATABASE_URL: "sqlite:///./sql_app.db"
+
+      frontend:
+        build:
+          context: ./frontend
+          dockerfile: Dockerfile
+        ports:
+          - "8000:8000"
+        volumes:
+          - ./frontend:/app # 開發時方便熱重載
+        depends_on:
+          - backend
+        # 其他前端服務的配置，如環境變數、命令等
+
+      # AI Agent 服務 (如 Web Surfer)
+      web_surfer_browser:
+        build:
+          context: ./src/magentic_ui/docker/magentic-ui-browser-docker
+          dockerfile: Dockerfile
+        # 其他配置
+    ```
+
+### 部署指引 (生產環境)
+- **鏡像構建與推送**: 在 CI/CD 流水線中構建優化後的生產鏡像，並推送至容器註冊表 (e.g., Docker Hub, AWS ECR)。
+- **部署策略**: 選擇合適的部署策略，如藍綠部署 (Blue/Green Deployment) 或金絲雀發布 (Canary Release)。
+- **容器編排**: 在生產環境中，考慮使用 Kubernetes 或 Docker Swarm 等容器編排工具來管理服務的擴展、負載均衡和高可用性。
+- **監控與日誌收集**: 部署 Prometheus/Grafana 或 ELK Stack 等方案，實時監控容器和應用程式的健康狀況和性能。
+
+## 🚀 專家心路歷程
+- **環境一致性**: 容器化的最大優勢在於提供了從開發到生產的一致性。這意味著在本地構建的應用程式，在生產環境中也能以相同的方式運行，大大減少了部署問題。
+- **性能與資源**: 雖然容器帶來了便利，但仍需關注資源消耗。優化 Dockerfile、使用輕量級基礎鏡像、合理配置資源限制 (CPU/Memory) 是提升性能和節約成本的關鍵。
+- **持續學習**: 容器技術和雲原生生態系統發展迅速，持續學習新的最佳實踐和工具，對於維護高效的部署流程至關重要。
+
+## 📋 品質檢核標準
+- **鏡像大小**: 最終構建的 Docker 鏡像大小是否最小化。
+- **構建時間**: 鏡像構建時間是否高效，是否充分利用了緩存。
+- **服務啟動時間**: 容器啟動是否迅速。
+- **資源消耗**: 容器運行時的 CPU、記憶體使用率是否在預期範圍內。
+- **可擴展性**: 應用程式是否能夠通過增加容器副本進行橫向擴展。
+- **日誌可觀測性**: 日誌是否能夠方便地收集、查看和分析。
+- **安全性**: 鏡像和運行時環境是否安全，是否存在已知的漏洞。

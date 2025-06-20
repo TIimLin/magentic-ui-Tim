@@ -36,7 +36,7 @@ WORKDIR /app
 
 # 將您的 config.yaml 複製到容器中
 # 確保在執行 docker build 的目錄下有 config.yaml 檔案
-COPY config.yaml ./config.yaml
+# COPY config.yaml ./config.yaml
 
 # 暴露 Magentic-UI 應用程式將監聽的連接埠
 EXPOSE 8081
@@ -44,5 +44,5 @@ EXPOSE 8081
 # 定義容器啟動時執行的命令
 # 直接運行 Magentic-UI 應用程式，因為現在所有依賴都已在全局環境中
 # --host 0.0.0.0 讓應用程式監聽容器內所有網路介面。
-# --config ./config.yaml 指向我們複製進去的配置檔案。
-CMD ["magentic", "ui", "--host", "0.0.0.0", "--port", "8081", "--config", "./config.yaml"]
+# CMD ["magentic", "ui", "--host", "0.0.0.0", "--port", "8081", "--config", "./config.yaml"]
+CMD ["magentic", "ui", "--host", "0.0.0.0", "--port", "8081"]

@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 
 from .agents.mcp import McpAgentConfig
 from .types import Plan
+from .models.gemini_client import GeminiChatCompletionClient  # noqa: F401 – ensure component registered
 
 
 class ModelClientConfigs(BaseModel):
@@ -24,17 +25,18 @@ class ModelClientConfigs(BaseModel):
     file_surfer: Optional[Union[ComponentModel, Dict[str, Any]]] = None
     action_guard: Optional[Union[ComponentModel, Dict[str, Any]]] = None
 
+    # Use Google Gemini by default for all agents; tweak model variant if needed
     default_client_config: ClassVar[Dict[str, Any]] = {
-        "provider": "OpenAIChatCompletionClient",
+        "provider": "magentic_ui.models.gemini_client.GeminiChatCompletionClient",
         "config": {
-            "model": "gpt-4.1-2025-04-14",
+            "model": "gemini-2.5-flash",  # default to fast & cost-effective variant
         },
         "max_retries": 10,
     }
     default_action_guard_config: ClassVar[Dict[str, Any]] = {
-        "provider": "OpenAIChatCompletionClient",
+        "provider": "magentic_ui.models.gemini_client.GeminiChatCompletionClient",
         "config": {
-            "model": "gpt-4.1-nano-2025-04-14",
+            "model": "gemini-2.5-flash",
         },
         "max_retries": 10,
     }

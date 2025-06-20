@@ -15,13 +15,14 @@ services:
     # Mount the docker socket so the app can start/stop the VNC browser container
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - ./config.yaml:/app/config.yaml:ro
+      # - ./config.yaml:/app/config.yaml:ro
 
     # Expose the host/IP that外部瀏覽器應該連到。在 shell 先 export MUI_EXTERNAL_HOST=57.181.203.134
     environment:
       - MUI_EXTERNAL_HOST=${MUI_EXTERNAL_HOST}
       - INSIDE_DOCKER=1
       - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}
 
     # Run the CLI inside the container
     command: >

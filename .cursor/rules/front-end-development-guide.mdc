@@ -1,0 +1,129 @@
+---
+description: Gatsby 前端開發指南。指導 AI 在開發或修改前端頁面與組件時，遵循專案的組件化、狀態管理、樣式設計、類型定義及測試最佳實踐，確保高效、高品質且可維護的前端開發。
+globs: 
+alwaysApply: false
+---
+# Gatsby 前端開發與實施指南
+
+## 🎯 專家分析與背景
+- **技術選型深層原因**: Gatsby 提供基於 React 的高性能靜態站點生成能力，結合 GraphQL 數據層和豐富的插件生態系統，非常適合構建快速、安全且可擴展的應用程式。TypeScript 提供了強大的類型檢查，提升程式碼品質和可維護性。Tailwind CSS 提供了高度靈活的原子化 CSS 框架，而 Ant Design 則提供了一套高品質的 UI 組件庫，兩者結合能實現高效且美觀的界面開發。
+- **業界最佳實踐與標準**: 遵循組件化設計原則，確保 UI 組件的高內聚、低耦合和可重用性。採用單向數據流，並通過狀態管理 (Zustand) 維護應用程式的狀態。重視響應式設計和無障礙設計。
+- **核心概念與多年實戰經驗總結**: 預渲染 (Pre-rendering) 和代碼分割是 Gatsby 的核心優勢，應充分利用以優化加載性能。精細的組件拆分和明確的屬性 (Props) 定義是提升開發效率和協作品質的關鍵。測試覆蓋應貫穿開發始終。
+
+## 🔍 核心實施策略
+
+### 技術架構設計
+- **專案結構**:
+    - `frontend/src/pages/`: 存放 Gatsby 頁面組件。
+    - `frontend/src/components/`: 存放可重用 UI 組件，建議按功能或領域劃分子目錄 (e.g., `common/`, `features/`)。
+    - `frontend/src/hooks/`: 存放自定義 React Hooks。
+    - `frontend/src/assets/`: 存放靜態資源，如圖片、字體。
+    - `frontend/src/styles/`: 存放全局樣式或 Tailwind CSS 配置。
+    - `frontend/src/components/types/`: 存放 TypeScript 類型定義。
+    - `frontend/src/components/store.tsx`: 存放 Zustand 狀態管理相關邏輯。
+- **組件化設計**: 將複雜的 UI 拆分為獨立、可組合的小組件，每個組件專注於單一職責。利用 Storybook 等工具管理組件庫。
+- **狀態管理**: 採用 Zustand 作為輕量級且高效的狀態管理方案，集中管理應用程式的共享狀態。
+- **數據流**: 保持數據從父組件流向子組件的單向流動，避免複雜的雙向綁定。
+
+### 開發實踐規範
+- **程式碼組織**: 將相關的組件、Hooks 和類型定義放在一起，提升可讀性和可維護性。
+- **檔案命名**: 組件檔案名採用 PascalCase (e.g., `Button.tsx`, `PlanCard.tsx`)，工具函數或 Hooks 採用 camelCase (e.g., `utils.ts`, `useAuth.ts`)。
+- **類型安全**: 充分利用 TypeScript 的類型推斷和明確類型註解，確保數據結構的正確性。
+- **樣式規範**: 統一使用 Tailwind CSS 進行樣式定義，對於複雜或需要主題化的組件，可結合 Ant Design 的樣式覆蓋機制。
+- **版本控制策略**: 遵循專案的 `git-workflow-guide.mdc`，使用功能分支進行開發，並通過 Squash Merge 合併到主分支。
+
+## 💻 具體實現指引
+
+### 環境配置
+- **Node.js**: 確保使用專案 `package.json` 中指定的 Node.js 版本。
+- **Yarn**: 建議使用 Yarn 進行依賴管理。
+    ```bash
+    cd frontend
+    yarn install
+    ```
+- **開發伺服器**: 啟動 Gatsby 開發伺服器。
+    ```bash
+    cd frontend
+    gatsby develop
+    ```
+
+### 程式碼實現
+- **React 組件範例**:
+    ```typescript jsx
+    // frontend/src/components/features/Plans/PlanCard.tsx 範例
+    import React from 'react';
+    import { Card, Button } from 'antd';
+    import { Plan } from '../../types/plan';
+
+    interface PlanCardProps {
+        plan: Plan;
+        onLearnMore: (planId: string) => void;
+    }
+
+    const PlanCard: React.FC<PlanCardProps> = ({ plan, onLearnMore }) => {
+        return (
+            <Card title={plan.name} className="shadow-md rounded-lg">
+                <p className="text-gray-600 mb-4">{plan.description}</p>
+                <Button type="primary" onClick={() => onLearnMore(plan.id)}>
+                    了解更多
+                </Button>
+            </Card>
+        );
+    };
+
+    export default PlanCard;
+    ```
+- **Zustand 狀態管理範例**:
+    ```typescript jsx
+    // frontend/src/components/store.tsx 範例
+    import { create } from 'zustand';
+
+    interface AppState {
+        count: number;
+        increase: () => void;
+        decrease: () => void;
+    }
+
+    const useAppStore = create<AppState>((set) => ({
+        count: 0,
+        increase: () => set((state) => ({ count: state.count + 1 })),
+        decrease: () => set((state) => ({ count: state.count - 1 })),
+    }));
+
+    export default useAppStore;
+    ```
+- **TypeScript 類型定義範例**:
+    ```typescript
+    // frontend/src/components/types/plan.ts 範例
+    export interface Plan {
+        id: string;
+        name: string;
+        description: string;
+        // ... 其他屬性
+    }
+
+    export interface Task {
+        id: string;
+        description: string;
+        isCompleted: boolean;
+        // ... 其他屬性
+    }
+    ```
+
+### 常見陷阱與解決方案
+- **Prop Drilling**: 當多層組件傳遞相同屬性時，考慮使用 Context API 或 Zustand 進行狀態管理。
+- **性能問題**: 使用 `React.memo`、`useCallback`、`useMemo` 優化組件渲染。圖片優化使用 Gatsby Image。
+- **SEO 問題**: 確保 Gatsby 頁面生成時有適當的 Meta 標籤和結構化數據。
+
+## 🚀 專家心路歷程
+- **組件設計原則**: 在設計組件時，始終思考其可重用性、獨立性和可測試性。將組件分為展示型 (Presentational) 和容器型 (Container) 有助於保持程式碼清晰。
+- **前端測試策略**: 強烈建議從單元測試開始，逐步擴展到整合測試和 E2E 測試。這能有效捕捉錯誤並確保應用程式的穩定性。
+- **效能優先**: 在開發初期就應考慮性能優化。Gatsby 的預渲染機制是天然的性能優勢，但仍需注意圖片、字體和第三方腳本的優化。
+
+## 📋 品質檢核標準
+- **功能完整性**: 所有頁面和組件是否按預期工作，並處理所有交互和數據狀態。
+- **響應式設計**: 應用程式在不同設備和螢幕尺寸下是否良好顯示和交互。
+- **性能指標**: 頁面加載速度、交互響應時間是否符合預期 (Core Web Vitals)。
+- **程式碼品質**: 遵循 ESLint 和 Prettier 規範，程式碼清晰、模組化，有良好註釋。
+- **可維護性**: 組件是否易於理解、修改和擴展。
+- **測試覆蓋率**: 確保核心組件、Hooks 和業務邏輯有足夠的測試覆蓋。

@@ -1,0 +1,91 @@
+---
+description: AI Agent 協作指南。指導 AI 在 magentic-ui 專案中，與其他 Agent 及使用者進行高效、安全的協作，明確 Agent 職責、通訊協議、人機協作模式及工具使用規範，以優化 AI Agent 系統的整體效能。
+globs: 
+alwaysApply: false
+---
+# AI Agent 協作指南
+
+## 🎯 專家分析與背景
+- **技術選型深層原因**: `magentic-ui-Tim` 專案以 AutoGen 作為核心 AI 框架，旨在實現多 Agent 協作、人機協作以及實時互動的智能開發環境。Auto-Generated User Interface (MagAgentic UI) 作為前端介面，提供了直觀的互動方式，使得 AI Agent 能更高效地理解用戶意圖並執行複雜任務。此指南將確保 Agent 系統能夠順暢運作，並最大化其協作價值。
+- **業界最佳實踐與標準**: 遵循多 Agent 系統設計原則，強調 Agent 間的職責分離、清晰的溝通協議。在人機協作方面，借鑒 Co-Planning、Co-Tasking 和 Action Guards 概念，實現高效且安全的互動。重視工具化與可擴展性，使 Agent 能夠靈活地使用外部工具完成任務。
+- **核心概念與多年實戰經驗總結**: 成功的 Agent 協作依賴於明確的目標、清晰的溝通和有效的錯誤處理。 Agent 的「角色」定義至關重要，每個 Agent 都應有其專精領域。安全隔離機制是處理 Agent 執行潛在危險操作的基石。實時回饋對於提升人機協作體驗至關重要。
+
+## 🔍 核心實施策略
+
+### 技術架構設計
+- **多 Agent 協作模式**: `Orchestrator` 作為核心協調者，負責任務分解、Agent 分配和結果整合。`WebSurfer` 處理網頁瀏覽和資訊提取。`Coder` 負責程式碼生成與修復。`FileSurfer` 處理文件系統操作。`UserProxy` 作為人機交互介面。
+- **Agent 間通訊協議**: 推薦使用基於訊息傳遞的非同步通訊模式，確保 Agent 能夠獨立執行任務並在必要時進行協調。訊息內容應結構化，包含任務描述、進度狀態和潛在問題。
+- **狀態管理**: 透過後端數據庫 (SQLModel) 持久化 Agent 的會話狀態、任務進度、歷史操作和學習記憶，確保跨會話的連貫性。
+
+### 開發實踐規範
+- **Agent 職責劃分**: 每個 Agent 應具備清晰的職責和能力範圍，避免職責重疊或模糊。Agent 的設計應遵循單一職責原則。
+- **工具使用規範**: Agent 在調用外部工具 (如 `playwright`、`bing_search`) 時，應明確工具的輸入、輸出和預期行為。工具調用應具備容錯機制。
+- **人機協作模式**: 
+    - **Co-Planning**: Agent 在任務開始前與用戶共同制定執行計劃，徵求用戶確認。
+    - **Co-Tasking**: Agent 在執行任務過程中，對於關鍵決策點或需要用戶輸入時，主動尋求用戶的參與和指導。
+    - **Action Guards**: 對於可能產生副作用或高風險的操作（如文件修改、網頁瀏覽），引入安全防護機制，在執行前徵求用戶明確批准。
+- **錯誤處理與回饋**: Agent 應具備錯誤檢測和自恢復能力。當遇到無法處理的錯誤時，應向用戶提供清晰的錯誤訊息和解決建議。實時進度回饋應透過前端界面展示。
+- **安全隔離**: 敏感操作（如執行程式碼、瀏覽外部網站）應在 Docker 容器內進行，並採用最小權限原則，限制容器的訪問權限，防止潛在的安全漏洞。
+
+## 💻 具體實現指引
+
+### Agent 相關檔案結構
+- `src/magentic_ui/agents/`: 存放各類 Agent 的核心邏輯。
+- `src/magentic_ui/teams/orchestrator/`: 存放 Orchestrator 的邏輯。
+- `src/magentic_ui/tools/`: 存放 Agent 可調用的工具定義。
+- `src/magentic_ui/docker/`: 存放 Agent 執行環境相關的 Docker 配置。
+
+### 程式碼實現範例
+- **Agent 定義 (概念性)**:
+    ```python
+    # src/magentic_ui/agents/_coder.py 範例 (概念性)
+    from autogen import Agent, ConversableAgent
+
+    class CoderAgent(ConversableAgent):
+        def __init__(self, name, llm_config=None, **kwargs):
+            super().__init__(name, llm_config=llm_config, **kwargs)
+            self.register_for_execution(self.generate_code, config=self.llm_config)
+
+        def generate_code(self, task: str):
+            # 這裡實現生成程式碼的邏輯
+            return f"Generated code for: {task}"
+    ```
+- **工具調用 (概念性)**:
+    ```python
+    # src/magentic_ui/tools/playwright/playwright_controller.py 範例 (概念性)
+    from magentic import tool
+
+    @tool
+    async def browse_url(url: str) -> str:
+        # 這裡實現通過 Playwright 瀏覽網頁的邏輯
+        return f"Successfully browsed: {url}"
+    ```
+- **Action Guard 整合 (概念性)**:
+    ```python
+    # src/magentic_ui/approval_guard.py 範例 (概念性)
+    from magentic_ui.guarded_action import guarded_action
+
+    @guarded_action(approval_message="是否允許執行此高風險操作?")
+    def dangerous_file_write(file_path: str, content: str):
+        # 只有在用戶批准後才會執行
+        with open(file_path, "w") as f:
+            f.write(content)
+    ```
+
+### 常見陷阱與解決方案
+- **Agent 陷入循環**: 設計清晰的終止條件，並引入最大對話輪數限制。
+- **Token 限制**: 善用上下文壓縮、總結歷史對話，減少傳遞給 LLM 的 Token 數量。
+- **模糊指令**: Agent 應主動向用戶請求澄清，確保理解任務。
+
+## 🚀 專家心路歷程
+- **逐步賦能 Agent**: 在開發 Agent 系統時，應逐步賦予 Agent 能力，從單一任務到多任務協作，從簡單工具到複雜工具鏈。這有助於控制複雜性並確保系統穩定性。
+- **重視人機互動設計**: AI Agent 的價值不僅在於其智能，更在於其與人類的協作能力。清晰的介面、及時的回饋和靈活的批准機制是提升用戶體驗的關鍵。
+- **持續評估與優化**: 定期對 Agent 系統進行評估，收集用戶回饋，並根據實際使用情況調整 Agent 的行為策略、工具使用和協作模式。
+
+## 📋 品質檢核標準
+- **任務完成率**: Agent 系統完成指定任務的成功率。
+- **協作效率**: Agent 間溝通是否高效，人機協作流程是否流暢。
+- **資源消耗**: Agent 運行時的 CPU、記憶體、Token 消耗是否合理。
+- **錯誤恢復能力**: Agent 在遇到錯誤時是否能有效地自恢復或向用戶求助。
+- **安全防護**: 高風險操作是否得到妥善的安全防護和用戶批准。
+- **可擴展性**: 是否容易添加新的 Agent 或工具。

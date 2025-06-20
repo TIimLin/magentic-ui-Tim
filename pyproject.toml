@@ -39,6 +39,7 @@ dependencies = [
     "pyyaml",
     "html2text",
     "psutil",
+    "google-generativeai~=0.4",
 ]
 
 [project.optional-dependencies]
@@ -118,7 +119,12 @@ exclude = ["src/magentic_ui/eval"]
 
 [tool.pyright]
 include = ["src", "tests", "samples"]
-exclude = ["src/magentic_ui/eval/benchmarks/assistantbench/evaluate_utils", "src/magentic_ui/agents/web_surfer/_cua_web_surfer.py", "src/magentic_ui/backend/web/routes"]
+exclude = [
+    "src/magentic_ui/eval/benchmarks/assistantbench/evaluate_utils",
+    "src/magentic_ui/agents/web_surfer/_cua_web_surfer.py",
+    "src/magentic_ui/backend/web/routes",
+    "src/magentic_ui/models/gemini_client.py",
+]
 typeCheckingMode = "strict"
 reportUnnecessaryIsInstance = false
 reportMissingTypeStubs = false
