@@ -32,14 +32,16 @@ const defaultConfig: GeneralConfig = {
   do_bing_search: false,
   websurfer_loop: false,
   model_configs: `model_config: &client
-  provider: magentic_ui.models.gemini_client.GeminiChatCompletionClient
+  provider: magentic_ui.models.bedrock_claude_client.BedrockClaudeChatCompletionClient
   config:
-    model: gemini-2.5-flash
+    model_id: us.anthropic.claude-sonnet-4-20250514-v1:0
+    aws_region: us-west-2
   max_retries: 5
 model_config_action_guard: &client_action_guard
-  provider: magentic_ui.models.gemini_client.GeminiChatCompletionClient
+  provider: magentic_ui.models.bedrock_claude_client.BedrockClaudeChatCompletionClient
   config:
-    model: gemini-2.5-flash
+    model_id: us.anthropic.claude-sonnet-4-20250514-v1:0
+    aws_region: us-west-2
   max_retries: 5
 
 orchestrator_client: *client

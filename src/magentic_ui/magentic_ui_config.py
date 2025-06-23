@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field
 from .agents.mcp import McpAgentConfig
 from .types import Plan
 from .models.gemini_client import GeminiChatCompletionClient  # noqa: F401 – ensure component registered
+from .models.bedrock_claude_client import BedrockClaudeChatCompletionClient  # noqa: F401 – register Bedrock client
 
 
 class ModelClientConfigs(BaseModel):
@@ -27,16 +28,18 @@ class ModelClientConfigs(BaseModel):
 
     # Use Google Gemini by default for all agents; tweak model variant if needed
     default_client_config: ClassVar[Dict[str, Any]] = {
-        "provider": "magentic_ui.models.gemini_client.GeminiChatCompletionClient",
+        "provider": "magentic_ui.models.bedrock_claude_client.BedrockClaudeChatCompletionClient",
         "config": {
-            "model": "gemini-2.5-flash",  # default to fast & cost-effective variant
+            "model_id": "us.anthropic.claude-sonnet-4-20250514-v1:0",
+            "aws_region": "us-west-2",
         },
         "max_retries": 10,
     }
     default_action_guard_config: ClassVar[Dict[str, Any]] = {
-        "provider": "magentic_ui.models.gemini_client.GeminiChatCompletionClient",
+        "provider": "magentic_ui.models.bedrock_claude_client.BedrockClaudeChatCompletionClient",
         "config": {
-            "model": "gemini-2.5-flash",
+            "model_id": "us.anthropic.claude-sonnet-4-20250514-v1:0",
+            "aws_region": "us-west-2",
         },
         "max_retries": 10,
     }

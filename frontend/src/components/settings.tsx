@@ -55,6 +55,8 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ isOpen, onClose }) => {
     { value: "gpt-4o-2024-08-06", label: "OpenAI GPT-4o" },
     { value: "gpt-4o-mini-2024-07-18", label: "OpenAI GPT-4o Mini" },
     { value: "gemini-2.5-flash", label: "Gemini 2.5 Flash" },
+    { value: "us.anthropic.claude-3-7-sonnet-20250219-v1:0", label: "Claude 3.7 Sonnet (Bedrock)" },
+    { value: "us.anthropic.claude-sonnet-4-20250514-v1:0", label: "Claude Sonnet 4 (Bedrock)" },
   ];
 
   const AZURE_AI_FOUNDRY_YAML = `model_config: &client
@@ -141,6 +143,22 @@ action_guard_client: *client
   provider: magentic_ui.models.gemini_client.GeminiChatCompletionClient
   config:
     model: ${model}
+  max_retries: 5
+
+orchestrator_client: *client
+coder_client: *client
+web_surfer_client: *client
+file_surfer_client: *client
+action_guard_client: *client
+`;
+  }
+
+  function generateClaudeModelConfig(modelId: string) {
+    return `model_config: &client
+  provider: magentic_ui.models.bedrock_claude_client.BedrockClaudeChatCompletionClient
+  config:
+    model_id: ${modelId}
+    aws_region: us-west-2
   max_retries: 5
 
 orchestrator_client: *client
@@ -288,6 +306,14 @@ action_guard_client: *client
       if (modelName === "ollama") {
         handleUpdateConfig({ model_configs: OLLAMA_YAML });
         message.success("Ollama configuration applied");
+        return;
+      }
+      // Claude models (Amazon Bedrock)
+      if (modelName.includes("claude")) {
+        handleUpdateConfig({
+          model_configs: generateClaudeModelConfig(modelName),
+        });
+        message.success("Claude model configuration applied");
         return;
       }
       // Gemini models

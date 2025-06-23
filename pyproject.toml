@@ -40,6 +40,7 @@ dependencies = [
     "html2text",
     "psutil",
     "google-generativeai~=0.4",
+    "boto3>=1.34",
 ]
 
 [project.optional-dependencies]
@@ -124,6 +125,7 @@ exclude = [
     "src/magentic_ui/agents/web_surfer/_cua_web_surfer.py",
     "src/magentic_ui/backend/web/routes",
     "src/magentic_ui/models/gemini_client.py",
+    "src/magentic_ui/models/bedrock_claude_client.py",
 ]
 typeCheckingMode = "strict"
 reportUnnecessaryIsInstance = false
