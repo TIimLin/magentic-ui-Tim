@@ -55,6 +55,7 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ isOpen, onClose }) => {
     { value: "gpt-4o-2024-08-06", label: "OpenAI GPT-4o" },
     { value: "gpt-4o-mini-2024-07-18", label: "OpenAI GPT-4o Mini" },
     { value: "gemini-2.5-flash", label: "Gemini 2.5 Flash" },
+    { value: "gemini-2.5-flash-lite-preview-06-17", label: "Gemini 2.5 Flash-Lite Preview 06-17" },
     { value: "us.anthropic.claude-3-7-sonnet-20250219-v1:0", label: "Claude 3.7 Sonnet (Bedrock)" },
     { value: "us.anthropic.claude-sonnet-4-20250514-v1:0", label: "Claude Sonnet 4 (Bedrock)" },
   ];
