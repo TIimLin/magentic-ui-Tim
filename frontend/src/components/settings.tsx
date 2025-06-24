@@ -44,16 +44,16 @@ const SettingsMenu: React.FC<SettingsMenuProps> = ({ isOpen, onClose }) => {
   const [allowedlistEnabled, setAllowedlistEnabled] = React.useState(false);
 
   const MODEL_OPTIONS = [
-    { value: "gpt-4.1-2025-04-14", label: "OpenAI GPT-4.1" },
-    { value: "gpt-4.1-mini-2025-04-14", label: "OpenAI GPT-4.1 Mini" },
-    { value: "azure-ai-foundry", label: "Azure AI Foundry Template" },
-    { value: "ollama", label: "Ollama (Local)" },
-    { value: "openrouter", label: "OpenRouter" },
-    { value: "gpt-4.1-nano-2025-04-14", label: "OpenAI GPT-4.1 Nano" },
-    { value: "o4-mini-2025-04-16", label: "OpenAI O4 Mini" },
-    { value: "o3-mini-2025-01-31", label: "OpenAI O3 Mini" },
-    { value: "gpt-4o-2024-08-06", label: "OpenAI GPT-4o" },
-    { value: "gpt-4o-mini-2024-07-18", label: "OpenAI GPT-4o Mini" },
+    // { value: "gpt-4.1-2025-04-14", label: "OpenAI GPT-4.1" },
+    // { value: "gpt-4.1-mini-2025-04-14", label: "OpenAI GPT-4.1 Mini" },
+    // { value: "azure-ai-foundry", label: "Azure AI Foundry Template" },
+    // { value: "ollama", label: "Ollama (Local)" },
+    // { value: "openrouter", label: "OpenRouter" },
+    // { value: "gpt-4.1-nano-2025-04-14", label: "OpenAI GPT-4.1 Nano" },
+    // { value: "o4-mini-2025-04-16", label: "OpenAI O4 Mini" },
+    // { value: "o3-mini-2025-01-31", label: "OpenAI O3 Mini" },
+    // { value: "gpt-4o-2024-08-06", label: "OpenAI GPT-4o" },
+    // { value: "gpt-4o-mini-2024-07-18", label: "OpenAI GPT-4o Mini" },
     { value: "gemini-2.5-flash", label: "Gemini 2.5 Flash" },
     { value: "gemini-2.5-flash-lite-preview-06-17", label: "Gemini 2.5 Flash-Lite Preview 06-17" },
     { value: "us.anthropic.claude-3-7-sonnet-20250219-v1:0", label: "Claude 3.7 Sonnet (Bedrock)" },
@@ -349,8 +349,7 @@ action_guard_client: *client
             )}
             {hasChanges && (
               <div className="text-secondary text-sm italic">
-                Warning: Settings changes will only apply when you create a new
-                session
+                Warning: Settings changes will only apply when you create a new session
               </div>
             )}
             <div className="flex gap-2 justify-end">
