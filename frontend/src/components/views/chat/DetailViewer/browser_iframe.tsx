@@ -65,13 +65,11 @@ const BrowserIframe: React.FC<BrowserIframeProps> = ({
     );
   }
 
-  // Build VNC URL with parameters
-  const host = window.location.hostname;
-  const vncUrl = `http://${host}:${novncPort}/vnc.html?autoconnect=true&resize=${
-    scaling === "remote" ? "remote" : "scale"
-  }&show_dot=true&scaling=${scaling}&quality=${quality}&compression=0&view_only=${
-    viewOnly ? 1 : 0
-  }`;
+  // noVNC 透過同源路徑存取，避免混用內容與額外 port
+  const encodedPath = encodeURIComponent(`/websockify?port=${novncPort}`);
+  const vncUrl = `${window.location.origin}/novnc/vnc.html?autoconnect=true&path=${encodedPath}` +
+    `&resize=${scaling === "remote" ? "remote" : "scale"}` +
+    `&show_dot=true&scaling=${scaling}&quality=${quality}&compression=0&view_only=${viewOnly ? 1 : 0}`;
 
   return (
     <div

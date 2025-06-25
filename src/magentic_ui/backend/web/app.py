@@ -89,6 +89,7 @@ app.add_middleware(
         "http://127.0.0.1:8000",
         "http://localhost:8001",
         "http://localhost:8081",
+        "https://aisearch.leopilot.com",
     ],
     allow_credentials=True,
     allow_methods=["*"],
